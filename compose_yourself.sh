@@ -48,7 +48,7 @@ fi
 
 ###Compose
 
-composer install || (echo "We cannot compose oursolves" && exit 1)
+composer install || (echo "We cannot compose ourselves" && exit 1)
 
 ###Strip git info
 
