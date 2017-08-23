@@ -1,7 +1,6 @@
 #!/bin/bash
 
 ####
-#Script takes two arguments, the source tag and the deploy tag
 ####
 
 TMP_DIR="/tmp"
