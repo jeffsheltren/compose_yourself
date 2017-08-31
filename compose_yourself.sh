@@ -6,16 +6,52 @@
 TMP_DIR="/tmp"
 NOW=$(date +"%m_%d_%Y")
 
-###Arguments
-
-if [ $# -ne 4 ]; then
-  echo 'Please provide a source repo and tag and a deploy repo and tag, like so:'
-  echo 'compose_yourself.sh <source_repo> <source_tag> <deploy_repo> <deploy_tag>'
+usage() {
+  echo "usage: $0 -s source-repo -t source-tag [-r destination-repo] [-d destination-tag]"
+  echo "    -s          Source git repo URI"
+  echo "    -t          Source git tag or branch to operate on"
+  echo "    -r          Destination repo to push composer-ized code to"
+  echo "    -d          Destination branch ta to push composer-ized code to"
+  echo ""
+  echo 'Please provide a source repo and tag, and a deploy repo and tag, like so:'
+  echo 'compose_yourself.sh -s <source_repo> -t <source_tag> -r <destination_repo> -d <destination_tag>'
+  echo "Destination repo and tag are optional. If not specified, the script will push to the source repo and/or branch."
   exit 1
+}
+
+while getopts "d:r:s:t:" opt; do
+  case $opt in
+    d)
+      TARGET_TAG=$OPTARG
+      ;;
+    r)
+      TARGET_REPO=$OPTARG
+      ;;
+    s)
+      SRC_REPO=$OPTARG
+      ;;
+    t)
+      SRC_TAG=$OPTARG
+      ;;
+    *)
+      usage
+  esac
+done
+
+if [ -z "${SRC_REPO}" ] || [ -z "${SRC_TAG}" ]
+then
+  usage
 fi
 
-SRC_REPO=$1
-SRC_TAG=$2
+# Set Target repo and branch if not specified.
+if [ -z "${TARGET_REPO}" ]
+then
+  TARGET_REPO=$SRC_REPO
+fi
+if [ -z "${TARGET_TAG}" ]
+then
+  TARGET_TAG=$SRC_TAG
+fi
 
 TARGET_REPO=$3
 TARGET_TAG=$4
@@ -25,13 +61,13 @@ TARGET_TAG=$4
 if [ -d "${TMP_DIR}/compose_yourself_work" ]; then
   rm -rf "${TMP_DIR}/compose_yourself_work"
 fi
- 
+
 mkdir "${TMP_DIR}/compose_yourself_work"
 
 ###Checkout Source
 
 pushd "${TMP_DIR}/compose_yourself_work"
-git clone ${SRC_REPO} src_checkout || exit 1
+git clone ${SRC_REPO} src_checkout || { echo "Error with git clone."; exit 1 }
 pushd src_checkout
 
 if [ -d web/core ]; then
@@ -63,7 +99,7 @@ popd
 #Strip git out of web
 pushd web
 find -name '.git' | xargs rm -rf
-popd 
+popd
 
 ###Commit
 
